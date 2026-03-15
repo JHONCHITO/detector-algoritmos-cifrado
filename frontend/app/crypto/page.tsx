@@ -3,8 +3,7 @@
 import { useState } from "react";
 
 const API_URL =
-  process.env.NEXT_PUBLIC_BACKEND_URL || "https://wine-classifier-backend.onrender.com";
-// Ejemplos internos (no visibles)
+  process.env.NEXT_PUBLIC_BACKEND_URL || "/api/crypto/predict-text";// Ejemplos internos (no visibles)
 const EXAMPLES: Record<string, string> = {
   "Texto plano": "el edificio es alto y el gato es negro",
   "Caesar Cipher (shift=3)": "ho hglilflr hv dors b ho jdwr hv qhjur",
