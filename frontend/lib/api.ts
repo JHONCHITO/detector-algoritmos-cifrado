@@ -7,7 +7,7 @@ export async function apiFetch(
   path: string,
   options?: RequestInit
 ): Promise<Response> {
-  const url = ${API_BASE_URL};
+  const url = `${API_BASE_URL}${path}`;
 
   const defaultHeaders: HeadersInit = {
     "Content-Type": "application/json",
@@ -23,3 +23,4 @@ export async function apiFetch(
 
   return fetch(url, mergedOptions);
 }
+
