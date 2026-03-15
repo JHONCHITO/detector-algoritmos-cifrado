@@ -1,13 +1,13 @@
 // frontend/lib/api.ts
 const API_BASE_URL =
-  process.env.NEXT_PUBLIC_API_BASE_URL ??
-  "https://crypto-predict-orcin.vercel.app";
+    process.env.NEXT_PUBLIC_API_BASE_URL ??
+    "http://localhost:5000";
 
 export async function apiFetch(
   path: string,
   options?: RequestInit
 ): Promise<Response> {
-  const url = `${API_BASE_URL}${path}`;
+  const url = ${API_BASE_URL};
 
   const defaultHeaders: HeadersInit = {
     "Content-Type": "application/json",
@@ -17,7 +17,7 @@ export async function apiFetch(
     ...options,
     headers: {
       ...defaultHeaders,
-      ...(options?.headers ?? {}),
+      ...(options?.headers || {}),
     },
   };
 
