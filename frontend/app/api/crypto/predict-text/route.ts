@@ -13,6 +13,7 @@ export async function POST(request: NextRequest) {
 
     // Make request to Render backend
     const response = await fetch(`${BACKEND_URL}/api/crypto/predict-text`, {
+      signal: AbortSignal.timeout(60000), // 60 second timeout for Render cold starts
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
