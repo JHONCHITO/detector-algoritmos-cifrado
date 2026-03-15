@@ -39,7 +39,7 @@ export default function CryptoPage() {
     setResult(null);
 
     try {
-      const res = await fetch(`${API_URL}/api/crypto/predict-text`, {
+      const res = await fetch(`${API_URL}`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ texto_cifrado: texto }),
