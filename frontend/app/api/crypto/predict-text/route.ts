@@ -1,7 +1,76 @@
 // API Route - Detector de Algoritmos de Cifrado
-// Implementa el clasificador directamente en Vercel (sin backend separado)
+// Implementa el clasificador y descifrador directamente en Vercel (sin backend separado)
 
 import { NextRequest, NextResponse } from 'next/server';
+
+// Función para descifrar Base64
+function decodeBase64(text: string): string | null {
+  try {
+    return atob(text);
+  } catch (e) {
+    return null;
+  }
+}
+
+// Función para descifrar César con diferentes shifts
+function decodeCaesar(text: string): { shift: number; decoded: string } | null {
+  for (let shift = 1; shift <= 25; shift++) {
+    let decoded = '';
+    for (const char of text) {
+      if (char >= 'a' && char <= 'z') {
+        decoded += String.fromCharCode(((char.charCodeAt(0) - 97 - shift + 26) % 26) + 97);
+      } else if (char >= 'A' && char <= 'Z') {
+        decoded += String.fromCharCode(((char.charCodeAt(0) - 65 - shift + 26) % 26) + 65);
+      } else {
+        decoded += char;
+      }
+    }
+    // Si el texto descifrado contiene palabras comunes en español, es probablemente el shift correcto
+    if (decoded.includes('el ') || decoded.includes('la ') || decoded.includes('es ') || 
+        decoded.includes('en ') || decoded.includes('un ') || decoded.includes('de ')) {
+      return { shift, decoded };
+    }
+  }
+  return null;
+}
+
+// Función para descifrar XOR con claves comunes
+function decodeXOR(hex: string): string | null {
+  const commonKeys = ['4b6579', '6b6579', '4b4559', 'key', 'Key', 'KEY'];
+  
+  for (const keyStr of commonKeys) {
+    try {
+      let key: number[];
+      if (keyStr.length <= 3) {
+        // ASCII key
+        key = Array.from(keyStr).map(c => c.charCodeAt(0));
+      } else {
+        // Hex key
+        key = [];
+        for (let i = 0; i < keyStr.length; i += 2) {
+          key.push(parseInt(keyStr.substr(i, 2), 16));
+        }
+      }
+      
+      let decoded = '';
+      for (let i = 0; i < hex.length; i += 2) {
+        const byte = parseInt(hex.substr(i, 2), 16);
+        const keyByte = key[Math.floor(i / 2) % key.length];
+        decoded += String.fromCharCode(byte ^ keyByte);
+      }
+      
+      // Verificar si el resultado es texto legible
+      if (/^[\x20-\x7E]+$/.test(decoded) && 
+          (decoded.includes('el ') || decoded.includes('la ') || decoded.includes('es ') ||
+           decoded.includes('en ') || decoded.includes('un ') || decoded.includes('de '))) {
+        return decoded;
+      }
+    } catch (e) {
+      continue;
+    }
+  }
+  return null;
+}
 
 function simpleCryptoClassifier(features: any): string {
   const entropia = features.entropia || 0;
@@ -68,12 +137,34 @@ export async function POST(request: NextRequest) {
     };
 
     const algorithm = simpleCryptoClassifier(features);
+    let decoded_text: string | null = null;
+
+    // Intentar descifrar según el algoritmo detectado
+    if (algorithm === 'Base64') {
+      decoded_text = decodeBase64(text);
+    } else if (algorithm === 'Sin cifrar') {
+      decoded_text = text;
+    } else {
+      // Intentar todos los métodos de descifrado
+      decoded_text = decodeBase64(text);
+      if (!decoded_text) {
+        const cesarResult = decodeCaesar(text);
+        if (cesarResult) {
+          decoded_text = cesarResult.decoded;
+        }
+      }
+      if (!decoded_text && /^[0-9a-fA-F]+$/.test(text)) {
+        decoded_text = decodeXOR(text);
+      }
+    }
 
     return NextResponse.json({
       algorithm,
       confidence: 0.80,
+      decoded_text,
       features
     });
+
   } catch (error) {
     console.error('Error en la API:', error);
     return NextResponse.json(
