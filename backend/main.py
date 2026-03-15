@@ -2,7 +2,7 @@ from fastapi import FastAPI, Request
 from fastapi.middleware.cors import CORSMiddleware
 import math
 
-app = FastAPI()
+app = FastAPIdocs_url=None, redoc_url=None)
 
 app.add_middleware(
     CORSMiddleware,
