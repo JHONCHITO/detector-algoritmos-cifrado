@@ -139,26 +139,29 @@ export async function POST(request: NextRequest) {
     const algorithm = simpleCryptoClassifier(features);
     let decoded_text: string | null = null;
 
-    // Intentar descifrar según el algoritmo detectado
-    if (algorithm === 'Base64') {
-      decoded_text = decodeBase64(text);
-    } else if (algorithm === 'Sin cifrar') {
-      decoded_text = text;
-    } else {
-      // Intentar todos los métodos de descifrado
-      decoded_text = decodeBase64(text);
-      if (!decoded_text) {
-        const cesarResult = decodeCaesar(text);
-        if (cesarResult) {
-          decoded_text = cesarResult.decoded;
-        }
-      }
-      if (!decoded_text && /^[0-9a-fA-F]+$/.test(text)) {
-        decoded_text = decodeXOR(text);
+        // SIEMPRE intentar descifrar con todos los métodos
+    let decoded_text: string | null = null;
+
+    // 1. Intentar Base64 primero
+    decoded_text = decodeBase64(text);
+    
+    // 2. Si no es Base64, intentar César
+    if (!decoded_text) {
+      const cesarResult = decodeCaesar(text);
+      if (cesarResult) {
+        decoded_text = cesarResult.decoded;
       }
     }
+    
+    // 3. Si no es César, intentar XOR (solo si es hex)
+    if (!decoded_text && /^[0-9a-fA-F]+$/.test(text) && text.length % 2 === 0) {
+      decoded_text = decodeXOR(text);
+    }
 
-    return NextResponse.json({
+    // 4. Si nada funcionó, devolver el texto original si es "Sin cifrar"
+    if (!decoded_text && algorithm === 'Sin cifrar') {
+      decoded_text = text;
+    }return NextResponse.json({
       algorithm,
       confidence: 0.80,
       decoded_text,
